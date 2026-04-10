@@ -39,7 +39,7 @@ header{
 
 .card{
   background:#fff;
-  padding:1.5rem;
+  padding:2rem; /* tambah */
   border-radius:18px;
   border:2px dashed var(--primary);
   box-shadow:var(--shadow);
@@ -50,11 +50,28 @@ h2{
   text-align:center;
 }
 
+  label{
+  display:block;
+  margin-top:12px;
+}
+
+input, select{
+  margin-top:6px;
+}
+
 select,input{
   width:100%;
   padding:10px;
   border-radius:10px;
   border:1px solid #ccc;
+}
+
+  input[type="file"]{
+  margin-top:10px;
+}
+
+button{
+  margin-top:20px;
 }
 
 button{
@@ -153,7 +170,9 @@ method="POST">
   <input type="hidden" name="Bukti_Transfer" id="buktiEmail">
   <label>Upload Bukti Transfer</label>
 <input type="file" id="bukti" accept="image/*" required>
-  
+
+<br><br>
+
 <button type="submit">Donasi Sekarang</button>
 
 </form>
@@ -261,8 +280,12 @@ form.addEventListener("submit", async function(e){
  let pot=n*0.03;
  let net=n-pot;
 
- const file = fileInput.files[0];
-  const fileInput = document.getElementById("bukti");
+const fileInput = document.getElementById("bukti");
+const file = fileInput.files[0];
+
+  const button = form.querySelector("button");
+button.innerText = "Mengirim...";
+button.disabled = true;
 
  if(!file){
    alert("Upload bukti transfer dulu!");
@@ -333,9 +356,6 @@ form.addEventListener("submit", async function(e){
  Bukti transfer sudah tersimpan
  `;
 });
-
-  button.innerText = "Mengirim...";
-button.disabled = true;
 </script>
 
 </body>
