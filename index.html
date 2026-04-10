@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fundraising SMK Muhammadiyah Gunungputri</title>
+
+<style>
+:root {
+  --primary:#1E3A8A;
+  --secondary:#FFC107;
+  --accent:#1E5631;
+  --light:#ffffff;
+  --shadow:0 8px 24px rgba(0,0,0,0.08);
+  --radius:18px;
+}
+
+body{
+  margin:0;
+  font-family:Segoe UI;
+  background:#fff;
+  background-image: repeating-linear-gradient(
+    to bottom,#ffffff 0px,#ffffff 23px,#dcdcdc 24px
+  );
+}
+
+header{
+  background:linear-gradient(135deg,var(--primary),#2747a9);
+  color:white;
+  text-align:center;
+  padding:2.5rem;
+  border-bottom:6px dashed var(--secondary);
+}
+
+.container{
+  width:min(1000px,92%);
+  margin:2rem auto;
+}
+
+.card{
+  background:#fff;
+  padding:1.5rem;
+  border-radius:18px;
+  border:2px dashed var(--primary);
+  box-shadow:var(--shadow);
+}
+
+h2{
+  color:var(--primary);
+  text-align:center;
+}
+
+select,input{
+  width:100%;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #ccc;
+}
+
+button{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:20px;
+  background:var(--primary);
+  color:#fff;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.result{
+  display:none;
+  margin-top:20px;
+  padding:15px;
+  border-radius:12px;
+  background:#e8f5e9;
+}
+
+.wa-float{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  background:#25D366;
+  width:60px;
+  height:60px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:white;
+  font-size:24px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>FUNDRAISING SEKOLAH</h1>
+<p>SMK Muhammadiyah Gunungputri</p>
+</header>
+
+<div class="container">
+<div class="card">
+
+<h2>Form Donasi</h2>
+
+<form id="formDonasi"
+action="https://formsubmit.co/smkmuhammadiyahgp2016@gmail.com"
+method="POST">
+
+<input type="hidden" name="_captcha" value="false">
+
+<label>Kategori Donasi</label>
+<select name="Kategori" required>
+<option value="">Pilih</option>
+<option>Dhuafa</option>
+<option>Yatim Piatu</option>
+<option>Apresiasi Guru / Bakti Guru</option>
+<option>Apresiasi Siswa</option>
+<option>Masjid Berdaya</option>
+<option>Peduli Lingkungan Sekolah</option>
+<option>Derma Peduli Alam</option>
+</select>
+
+<br><br>
+
+<label>Nama Donatur</label>
+<input type="text" name="Nama" required>
+
+<br><br>
+
+<label>No WhatsApp</label>
+<input type="text" name="HP" required>
+
+<br><br>
+
+<label>Nominal Donasi</label>
+<input type="number" id="nominal" required>
+
+<br><br>
+
+<label>Potongan 3%</label>
+<input type="text" id="potongan" readonly>
+
+<br><br>
+
+<label>Total Bersih</label>
+<input type="text" id="bersih" readonly>
+
+<br><br>
+
+<button type="submit">Donasi Sekarang</button>
+
+</form>
+
+<div id="result" class="result"></div>
+
+</div>
+</div>
+
+<a href="https://wa.me/6281548711614" class="wa-float">💬</a>
+
+<h2>Total Donasi: <span id="totalDonasi">Rp 0</span></h2>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<script>
+const nominal=document.getElementById("nominal");
+const potongan=document.getElementById("potongan");
+const bersih=document.getElementById("bersih");
+const form=document.getElementById("formDonasi");
+const result=document.getElementById("result");
+
+// ✅ INIT SUPABASE (FIX)
+const supabaseClient = window.supabase.createClient(
+  "https://copkomggoopwzlntlexb.supabase.co",
+  "sb_publishable_KQ9O8EzRvInRU0Y99x3mow_qRegVwJj"
+);
+
+function rupiah(x){
+ return "Rp "+Number(x).toLocaleString("id-ID");
+}
+
+nominal.addEventListener("input",()=>{
+ let n=nominal.value||0;
+ let pot=n*0.03;
+ let net=n-pot;
+
+ potongan.value=rupiah(pot);
+ bersih.value=rupiah(net);
+});
+
+// ✅ LOAD TOTAL DONASI (AMAN)
+async function loadTotal(){
+  let { data, error } = await supabaseClient
+    .from("donasi")
+    .select("bersih");
+
+  if(error){
+    console.log(error);
+    return;
+  }
+
+  let total = 0;
+  if(data){
+    total = data.reduce((a,b)=>a + (b.bersih || 0), 0);
+  }
+
+  document.getElementById("totalDonasi").innerText =
+    "Rp " + total.toLocaleString("id-ID");
+}
+
+// ✅ REALTIME
+supabaseClient
+  .channel('realtime-donasi')
+  .on('postgres_changes',
+    { event: 'INSERT', schema: 'public', table: 'donasi' },
+    payload => {
+      loadTotal();
+    }
+  )
+  .subscribe();
+
+loadTotal();
+
+function download(data){
+ let text=`
+JURNAL DONASI
+
+Nama: ${data.nama}
+Kategori: ${data.kategori}
+Nominal: ${data.nominal}
+Potongan: ${data.potongan}
+Total Bersih: ${data.bersih}
+Tanggal: ${new Date().toLocaleString("id-ID")}
+
+Rekening Tujuan:
+BSI 7343813354
+a.n Rizky Ahmed Darmawan
+`;
+
+ let blob=new Blob([text],{type:"text/plain"});
+ let url=URL.createObjectURL(blob);
+
+ let a=document.createElement("a");
+ a.href=url;
+ a.download="bukti-donasi.txt";
+ a.click();
+}
+
+// ✅ SUBMIT (SUDAH MASUK SUPABASE)
+form.addEventListener("submit", async function(e){
+ e.preventDefault();
+
+ let n=parseInt(nominal.value||0);
+ let pot=n*0.03;
+ let net=n-pot;
+
+ let data={
+  nama:form.querySelector('[name="Nama"]').value,
+  kategori:form.querySelector('[name="Kategori"]').value,
+  nominal:rupiah(n),
+  potongan:rupiah(pot),
+  bersih:rupiah(net)
+ };
+
+ // ✅ SIMPAN KE SUPABASE
+ const { error } = await supabaseClient
+   .from("donasi")
+   .insert([{
+     nama:data.nama,
+     kategori:data.kategori,
+     nominal:n,
+     potongan:pot,
+     bersih:net
+   }]);
+
+ if(error){
+   alert("Gagal simpan ke database!");
+   console.log(error);
+   return;
+ }
+
+ download(data);
+
+ // optional email
+ fetch(form.action,{
+  method:"POST",
+  body:new FormData(form)
+ });
+
+ result.style.display="block";
+ result.innerHTML=`
+ ✅ Donasi berhasil!<br>
+ Terima kasih <b>${data.nama}</b><br><br>
+ Silakan transfer ke:<br>
+ <b>BSI 7343813354</b><br>
+ a.n Rizky Ahmed Darmawan
+ `;
+});
+</script>
+
+</body>
+</html>
