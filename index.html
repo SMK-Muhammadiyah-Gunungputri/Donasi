@@ -151,6 +151,8 @@ method="POST">
 <br><br>
 
   <input type="hidden" name="Bukti_Transfer" id="buktiEmail">
+  <label>Upload Bukti Transfer</label>
+<input type="file" id="bukti" accept="image/*" required>
   
 <button type="submit">Donasi Sekarang</button>
 
@@ -160,9 +162,6 @@ method="POST">
 
 </div>
 </div>
-
-  <label>Upload Bukti Transfer</label>
-<input type="file" id="bukti" accept="image/*" required>
 
 <a href="https://wa.me/6281548711614" class="wa-float">💬</a>
 
@@ -263,6 +262,7 @@ form.addEventListener("submit", async function(e){
  let net=n-pot;
 
  const file = fileInput.files[0];
+  const fileInput = document.getElementById("bukti");
 
  if(!file){
    alert("Upload bukti transfer dulu!");
@@ -333,6 +333,9 @@ form.addEventListener("submit", async function(e){
  Bukti transfer sudah tersimpan
  `;
 });
+
+  button.innerText = "Mengirim...";
+button.disabled = true;
 </script>
 
 </body>
