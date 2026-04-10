@@ -298,13 +298,18 @@ button.disabled = true;
  const { data: uploadData, error: uploadError } = await supabaseClient
    .storage
    .from('bukti-donasi')
+  
+    if(file.size > 2 * 1024 * 1024){
+  alert("Ukuran file maksimal 2MB");
+  return;
+}
    .upload(fileName, file);
 
   button.innerText = "Donasi Sekarang";
 button.disabled = false;
 
  if(uploadError){
-   alert("Gagal upload bukti!");
+   alert("Gagal upload: " + uploadError.message);
    console.log(uploadError);
    return;
  }
@@ -328,11 +333,6 @@ button.disabled = false;
      bersih:net,
      bukti:fileUrl // 🔥 simpan link gambar
    }]);
-
-  if(file.size > 2 * 1024 * 1024){
-  alert("Ukuran file maksimal 2MB");
-  return;
-}
 
  if(error){
    alert("Gagal simpan ke database!");
