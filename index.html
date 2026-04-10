@@ -300,6 +300,9 @@ button.disabled = true;
    .from('bukti-donasi')
    .upload(fileName, file);
 
+  button.innerText = "Donasi Sekarang";
+button.disabled = false;
+
  if(uploadError){
    alert("Gagal upload bukti!");
    console.log(uploadError);
@@ -325,6 +328,11 @@ button.disabled = true;
      bersih:net,
      bukti:fileUrl // 🔥 simpan link gambar
    }]);
+
+  if(file.size > 2 * 1024 * 1024){
+  alert("Ukuran file maksimal 2MB");
+  return;
+}
 
  if(error){
    alert("Gagal simpan ke database!");
