@@ -150,6 +150,8 @@ method="POST">
 
 <br><br>
 
+  <input type="hidden" name="Bukti_Transfer" id="buktiEmail">
+  
 <button type="submit">Donasi Sekarang</button>
 
 </form>
@@ -158,6 +160,9 @@ method="POST">
 
 </div>
 </div>
+
+  <label>Upload Bukti Transfer</label>
+<input type="file" id="bukti" accept="image/*" required>
 
 <a href="https://wa.me/6281548711614" class="wa-float">💬</a>
 
@@ -257,23 +262,45 @@ form.addEventListener("submit", async function(e){
  let pot=n*0.03;
  let net=n-pot;
 
- let data={
-  nama:form.querySelector('[name="Nama"]').value,
-  kategori:form.querySelector('[name="Kategori"]').value,
-  nominal:rupiah(n),
-  potongan:rupiah(pot),
-  bersih:rupiah(net)
- };
+ const file = fileInput.files[0];
 
- // ✅ SIMPAN KE SUPABASE
+ if(!file){
+   alert("Upload bukti transfer dulu!");
+   return;
+ }
+
+ // ✅ Upload ke Supabase Storage
+ const fileName = Date.now() + "_" + file.name;
+
+ const { data: uploadData, error: uploadError } = await supabaseClient
+   .storage
+   .from('bukti-donasi')
+   .upload(fileName, file);
+
+ if(uploadError){
+   alert("Gagal upload bukti!");
+   console.log(uploadError);
+   return;
+ }
+
+ // ✅ Ambil URL file
+ const { data: publicUrlData } = supabaseClient
+   .storage
+   .from('bukti-donasi')
+   .getPublicUrl(fileName);
+
+ const fileUrl = publicUrlData.publicUrl;
+
+ // ✅ SIMPAN KE DATABASE
  const { error } = await supabaseClient
    .from("donasi")
    .insert([{
-     nama:data.nama,
-     kategori:data.kategori,
+     nama:form.querySelector('[name="Nama"]').value,
+     kategori:form.querySelector('[name="Kategori"]').value,
      nominal:n,
      potongan:pot,
-     bersih:net
+     bersih:net,
+     bukti:fileUrl // 🔥 simpan link gambar
    }]);
 
  if(error){
@@ -282,21 +309,28 @@ form.addEventListener("submit", async function(e){
    return;
  }
 
- download(data);
-
- // optional email
+  document.getElementById("buktiEmail").value = fileUrl;
+  
+ // ✅ tetap kirim email
  fetch(form.action,{
   method:"POST",
   body:new FormData(form)
  });
 
+ // ✅ download bukti
+ download({
+  nama:form.querySelector('[name="Nama"]').value,
+  kategori:form.querySelector('[name="Kategori"]').value,
+  nominal:rupiah(n),
+  potongan:rupiah(pot),
+  bersih:rupiah(net)
+ });
+
  result.style.display="block";
  result.innerHTML=`
  ✅ Donasi berhasil!<br>
- Terima kasih <b>${data.nama}</b><br><br>
- Silakan transfer ke:<br>
- <b>BSI 7343813354</b><br>
- a.n Rizky Ahmed Darmawan
+ Terima kasih 🙏<br>
+ Bukti transfer sudah tersimpan
  `;
 });
 </script>
